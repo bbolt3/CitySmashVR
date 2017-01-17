@@ -30,7 +30,7 @@ public class Person : MonoBehaviour {
 
     private void OnCollisionEnter(Collision other)
     {
-        if (isAlive)
+        if (isAlive && other.relativeVelocity.magnitude > 10f)
         {
             var velMag = other.relativeVelocity.magnitude;
             health -= (int)(velMag / armorRating);
