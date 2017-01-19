@@ -1,16 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
-using VRTK;
 
-public class HumanNavigation : Navigation
-{
-    
+public class VehicleNavigation : Navigation {
+
 	// Use this for initialization
 	private void Start ()
 	{
-        Initialize();      
+		Initialize();
 	}
 	
 	// Update is called once per frame
@@ -18,6 +15,4 @@ public class HumanNavigation : Navigation
 	{
         UpdateWanderPath();
 	}
-
-    
 }
