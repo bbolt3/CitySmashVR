@@ -13,6 +13,6 @@ public class VehicleNavigation : Navigation {
 	// Update is called once per frame
 	private void Update ()
 	{
-        UpdateWanderPath();
+		UpdateWanderPath();
 	}
 }
