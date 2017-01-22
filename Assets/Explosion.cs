@@ -7,6 +7,8 @@ public class Explosion : MonoBehaviour {
     public GameObject explosionPrefab;
     public GameObject smokePrefab;
     public GameObject bloodPrefab;
+    public GameObject primaryDebrisPrefab;
+    public GameObject secondaryDebrisPrefab;
     public float blastRadius = 10f;
     public float blastPower = 20f;
     public float blastUpwardsModifier = 3f;
@@ -16,28 +18,7 @@ public class Explosion : MonoBehaviour {
     private GameObject instantiatedSmoke;
     private bool collisionStarted = false;
 
-    public void OnCollisionEnter (Collision other)
-    {
-       
-        if (other.gameObject.tag != "GameController" && other.gameObject.tag != "Untagged")
-        {
-            if (this.tag == "Bombs" && other.relativeVelocity.magnitude > 1)
-                BombExplosion(other);
-            else if (this.tag == "Vehicle" && other.relativeVelocity.magnitude > 1)
-                VehicleExplosion(other);
-        }
-    }
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
-    private void VehicleExplosion(Collision other)
+    public void VehicleExplosion()
     {
         if (!collisionStarted)
         {
@@ -50,15 +31,36 @@ public class Explosion : MonoBehaviour {
             instantiatedSmoke.gameObject.transform.position = gameObject.transform.position;
         }
     }
-    private void BombExplosion(Collision other)
+    public void BombExplosion()
     {
         DoExplosion();
         ExplosionDamage();
         Destroy(gameObject);
     }
+
+    public void HouseExplosion(float addedForce)
+    {
+        if (!collisionStarted)
+        {
+            collisionStarted = true;
+            if (primaryDebrisPrefab != null)
+                CreateDebrisAndAddForce(primaryDebrisPrefab, addedForce);
+            if (secondaryDebrisPrefab != null)
+                CreateDebrisAndAddForce(secondaryDebrisPrefab, addedForce);
+        }
+    }
+
+    private void CreateDebrisAndAddForce(GameObject generatedDebris, float addedForce)
+    {
+        var debris = Instantiate(generatedDebris, gameObject.transform.position, primaryDebrisPrefab.transform.rotation);
+        var rigidbody = debris.GetComponent<Rigidbody>();
+        if (rigidbody != null)
+            rigidbody.AddExplosionForce(addedForce, debris.transform.position, blastRadius);
+    }
     private void DoExplosion()
     {
         instantiatedExplosion = Instantiate(explosionPrefab, transform.position, transform.rotation);
+        SendRaycast();
         Destroy(instantiatedExplosion.gameObject, 4f);
     }
     private void ExplosionDamage()
@@ -70,6 +72,15 @@ public class Explosion : MonoBehaviour {
             var rigidBody = hit.GetComponent<Rigidbody>();
             if (rigidBody != null && rigidBody.gameObject.layer != LayerMask.NameToLayer("Camera"))
                 rigidBody.AddExplosionForce(blastPower, explosionPosition, blastRadius, blastUpwardsModifier);
+        }
+    }
+    private void SendRaycast()
+    {
+        var hits = Physics.SphereCastAll(instantiatedExplosion.transform.position, blastRadius, transform.forward);
+        foreach(var hit in hits)
+        {
+            var damage = blastPower / hit.distance;
+            hit.transform.SendMessage("HitByRaycast", damage, SendMessageOptions.DontRequireReceiver);
         }
     }
     private IEnumerator DelayedExplosion(float duration)
